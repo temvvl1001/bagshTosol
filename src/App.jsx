@@ -489,7 +489,7 @@ const wordCards = [
                         inset: 0,
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         borderRadius: '16px',
-                        transform: 'rotate(3deg)',
+                        // transform: 'rotate(3deg)',
                         transition: 'transform 0.3s'
                       }}></div>
                       <img
