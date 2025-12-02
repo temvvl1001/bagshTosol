@@ -10,14 +10,14 @@ export default function DictionaryApp() {
     { text: 'Сайн байна уу! Би танд үг тайлбарлах, жишээ өгөх асуудлаар туслах бэлэн байна. 😊', isUser: false }
   ]);
   const [expandedCards, setExpandedCards] = useState({});
+  const [isAiBusy, setIsAiBusy] = useState(false);
 
-  const tabs = ['Home', 'Game', 'Culture', 'Writing tips'];
+  const tabs = ['Home', 'Game', 'Culture'];
 
   const routeMap = {
     'Home': '/home',
     'Game': '/game',
     'Culture': '/culture',
-    'Writing tips': '/writing-tips'
   };
 
   const tabFromPath = (path) => {
@@ -25,7 +25,6 @@ export default function DictionaryApp() {
     if (p === '/home' || p === '/') return 'Home';
     if (p === '/game') return 'Game';
     if (p === '/culture') return 'Culture';
-    if (p === '/writing-tips') return 'Writing tips';
     return 'Home';
   };
 
@@ -68,6 +67,18 @@ const wordCards = [
       'Хазаарыг зөөлөн жолоодсоноор морь тайван явдаг.',
       'Хазаар сайн таарсан бол морь илүү захирагдмал болдог.',
       'Уралдаанчид хазаар барилтаараа морийг хурд, чиглэлд оруулдаг.'
+    ]
+  },
+  {
+    word: 'Унь',
+    pronunciation: 'Uni',
+    date: 'NOVEMBER 30, 2025',
+    image: "/uni.png",
+    meaning: 'Монгол гэрийн дээврийг тогтоох нарийн урт мод, тооноос хананд хүрч тогтдог хэсэг.',
+    examples: [
+      'Унь нь тооно болон хананд холбогдож гэрийн дээврийг бүрдүүлдэг.',
+      'Гэрийн бат бөх байдалд уньнуудын зөв байрлал чухал.',
+      'Унь олон тоогоор нийлж гэрийн дээвэр бүтдэг.'
     ]
   },
   {
@@ -118,18 +129,182 @@ const wordCards = [
       'Уламжлалт урчууд угалзыг нарийн гар ажиллагаагаар зурдаг.'
     ]
   },
+  {
+    word: 'Уурга',
+    pronunciation: 'Urga',
+    date: 'NOVEMBER 30, 2025',
+    image: "/uurga.png",
+    meaning: 'Морь, мал барихад хэрэглэдэг урт модон саваа, үзүүрт нь уяа хийсэн хэрэгсэл.',
+    examples: [
+      'Уургаар адуу барих нь монголчуудын эртний арга.',
+      'Уурга урт байх тусам мал барихад хялбар болдог.',
+      'Адууны уяа уурганд сайн тохирдог.'
+    ]
+  },
+  {
+    word: 'Торго',
+    pronunciation: 'Torgo',
+    date: 'NOVEMBER 30, 2025',
+    image: "/torgo.png",
+    meaning: 'Монголчуудын уламжлалт тансаг даавуу, ихэвчлэн торгон утсаар нэхэгдсэн.',
+    examples: [
+      'Торгоор дээл хийвэл маш гоёмсог болдог.',
+      'Эрт цагт торгыг ховор тансаг эд гэж үздэг байсан.',
+      'Торгоны өнгө нь баяр ёслолд онцгой хэрэглэгддэг.'
+    ]
+  },
+  {
+    word: 'Дээл',
+    pronunciation: 'Deel',
+    date: 'NOVEMBER 30, 2025',
+    image: "/deel.png",
+    meaning: 'Монголчуудын уламжлалт үндэсний хувцас.',
+    examples: [
+      'Дээл нь улирал бүрт өөр өөр материалаар хийгддэг.',
+      'Наадмын үеэр хүмүүс гоёмсог дээл өмсдөг.',
+      'Дээл нь монголчуудын соёлын бэлгэдэл.'
+    ]
+  },
+  {
+    word: 'Нэхий',
+    pronunciation: 'Nekhii',
+    date: 'NOVEMBER 30, 2025',
+    image: "/nekhii.png",
+    meaning: 'Малын арьсыг боловсруулж, дулаан хадгалах зориулалттай эдлэл.',
+    examples: [
+      'Нэхий дээл өвөл дулаан байдаг.',
+      'Нэхийгээр гутал, дээл хийдэг.',
+      'Нэхий нь монголчуудын өвлийн гол хэрэглээ.'
+    ]
+  },
+  {
+    word: 'Тулга',
+    pronunciation: 'Tulga',
+    date: 'NOVEMBER 30, 2025',
+    image: "/tulga.png",
+    meaning: 'Гэрийн голд байрлах гурван чулуу, гал түлэх суурь.',
+    examples: [
+      'Тулганд гал асаах нь гэрийн амьдралын эхлэл.',
+      'Тулга гурван чулуугаар тогтоно.',
+      'Тулга нь монголчуудын ахуйд галын төвийг илэрхийлдэг.'
+    ]
+  },
 ];
 
 
 
-  const sendMessage = () => {
-    if (chatMessage.trim()) {
-      setMessages([...messages, 
-        { text: chatMessage, isUser: true },
-        { text: 'Таны асуултыг ойлгож байна. Би танд тусалж чадна! 🎯', isUser: false }
-      ]);
-      setChatMessage('');
+  const mnNorm = (s) => (s || '').toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/ө/g, 'о')
+    .replace(/ү/g, 'у');
+  const cyrToAscii = (s) => (s || '').toLowerCase()
+    .replace(/а/g, 'a')
+    .replace(/б/g, 'b')
+    .replace(/в/g, 'v')
+    .replace(/г/g, 'g')
+    .replace(/д/g, 'd')
+    .replace(/е/g, 'e')
+    .replace(/ё/g, 'e')
+    .replace(/ж/g, 'j')
+    .replace(/з/g, 'z')
+    .replace(/и/g, 'i')
+    .replace(/й/g, 'i')
+    .replace(/к/g, 'k')
+    .replace(/л/g, 'l')
+    .replace(/м/g, 'm')
+    .replace(/н/g, 'n')
+    .replace(/о/g, 'o')
+    .replace(/ө/g, 'o')
+    .replace(/п/g, 'p')
+    .replace(/р/g, 'r')
+    .replace(/с/g, 's')
+    .replace(/т/g, 't')
+    .replace(/у/g, 'u')
+    .replace(/ү/g, 'u')
+    .replace(/ф/g, 'f')
+    .replace(/х/g, 'h')
+    .replace(/ц/g, 'ts')
+    .replace(/ч/g, 'ch')
+    .replace(/ш/g, 'sh')
+    .replace(/щ/g, 'sh')
+    .replace(/ъ/g, '')
+    .replace(/ь/g, '')
+    .replace(/ы/g, 'y')
+    .replace(/э/g, 'e')
+    .replace(/ю/g, 'yu')
+    .replace(/я/g, 'ya');
+
+  const filteredWordCards = (() => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return wordCards;
+    const qNorm = mnNorm(q);
+    const qAscii = q.replace(/[öÖ]/g, 'o').replace(/[üÜ]/g, 'u');
+    return wordCards.filter((item) => {
+      const w = (item.word || '');
+      const p = (item.pronunciation || '');
+      const m = (item.meaning || '');
+      const exs = Array.isArray(item.examples) ? item.examples : [];
+      if (mnNorm(w).includes(qNorm)) return true;
+      if (mnNorm(m).includes(qNorm)) return true;
+      if (exs.some(ex => mnNorm(ex).includes(qNorm))) return true;
+      if (p.toLowerCase().includes(qAscii)) return true;
+      if (cyrToAscii(w).includes(qAscii)) return true;
+      return false;
+    });
+  })();
+
+  const buildExplanation = (query) => {
+    const q = (query || '').toLowerCase().trim();
+    if (!q) return 'Please enter a word to explain.';
+    const tokens = q.split(/[^a-zA-ZА-Яа-яҮүӨөЁё]+/).filter(Boolean);
+    const matchBy = (item) => {
+      const w = (item.word || '').toLowerCase();
+      const p = (item.pronunciation || '').toLowerCase();
+      if (q === w || q === p) return true;
+      if (q.includes(w) || q.includes(p)) return true;
+      return tokens.some(t => w === t || p === t);
+    };
+    const found = wordCards.find(matchBy);
+    if (!found) {
+      const suggest = wordCards.slice(0, 5).map(it => `${it.word} [${it.pronunciation}]`).join(', ');
+      return `I could not find that word in today’s cards.
+Try asking about: ${suggest}`;
     }
+    const lines = [
+      `${found.word} [${found.pronunciation}]`,
+      `Meaning: ${found.meaning}`,
+      `Examples:`,
+      ...found.examples.map((ex, i) => `- ${ex}`)
+    ];
+    return lines.join('\n');
+  };
+  const askAI = async (query) => {
+    const key = process.env.REACT_APP_OPENAI_API_KEY;
+    const model = process.env.REACT_APP_OPENAI_MODEL || 'gpt-4o-mini';
+    const url = process.env.REACT_APP_OPENAI_URL || 'https://api.openai.com/v1/chat/completions';
+    if (!key) return null;
+    const sys = 'Та Монгол хэлний толь бичиг шиг үгийг тайлбарлаж, богино тодорхойлолт, 2-3 жишээ өгүүлбэрээр хариулна. Хариултаа товч, ойлгомжтой бичнэ.';
+    const body = { model, messages: [ { role: 'system', content: sys }, { role: 'user', content: query } ], temperature: 0.2 };
+    try {
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
+      const data = await res.json();
+      const text = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      return text || null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const sendMessage = async () => {
+    const input = chatMessage.trim();
+    if (!input || isAiBusy) return;
+    setChatMessage('');
+    setMessages(prev => [...prev, { text: input, isUser: true }]);
+    setIsAiBusy(true);
+    const ai = await askAI(input);
+    const reply = ai || buildExplanation(input);
+    setMessages(prev => [...prev, { text: reply, isUser: false }]);
+    setIsAiBusy(false);
   };
 
   return (
@@ -352,7 +527,7 @@ const wordCards = [
             gap: '32px'
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {wordCards.map((item, index) => (
+              {filteredWordCards.map((item, index) => (
                 <div
                   key={index}
                   style={{
@@ -410,7 +585,7 @@ const wordCards = [
                         }}>
                           {item.word}
                         </h2>
-                        <button style={{
+                        {/* <button style={{
                           width: '40px',
                           height: '40px',
                           borderRadius: '50%',
@@ -434,7 +609,7 @@ const wordCards = [
                           <svg width="20" height="20" fill="none" stroke="#9333ea" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
                           </svg>
-                        </button>
+                        </button> */}
                       </div>
                       <p style={{ 
                         fontFamily: 'monospace',

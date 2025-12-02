@@ -82,7 +82,7 @@ function GamePage({ onBack, sourceWords = [] }) {
           <div style={{
             background: 'rgba(255, 255, 255, 0.98)',
             borderRadius: '24px',
-            padding: '24px',
+            padding: '30px',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.12)'
           }}>
             <div style={{
@@ -121,7 +121,7 @@ function GamePage({ onBack, sourceWords = [] }) {
                   {questions.length ? questions[currentQuestion].word : 'Асуулт алга'}
                 </h2>
                 <p style={{ fontSize: '16px', color: '#6b7280', margin: '0 0 16px 0' }}>
-                  Энэ үгийг англиар орчуул:
+                  Энэ үгийг утга нь :
                 </p>
                 <div style={{
                   display: 'grid',
