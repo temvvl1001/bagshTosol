@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import GamePage from '/Users/butentemvvlentem/Bagshnar /my-app/src/game.jsx';  
+
+import React, { useState, useEffect } from 'react';
+import GamePage from '/Users/butentemvvlentem/Bagshnar /my-app/src/game.jsx';
+import HomePage from '/Users/butentemvvlentem/Bagshnar /my-app/src/Home.jsx';
+import CulturePage from '/Users/butentemvvlentem/Bagshnar /my-app/src/Culture.jsx';
 
 export default function DictionaryApp() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,38 +13,302 @@ export default function DictionaryApp() {
   const [messages, setMessages] = useState([
     { text: 'Сайн байна уу! Би танд үг тайлбарлах, жишээ өгөх асуудлаар туслах бэлэн байна. 😊', isUser: false }
   ]);
+  const [expandedCards, setExpandedCards] = useState({});
+  const [isAiBusy, setIsAiBusy] = useState(false);
 
-  const tabs = ['Home', 'Game', 'Culture', 'Writing tips'];
+  const tabs = ['Home', 'Game', 'Culture'];
 
-  const wordCards = [
-    {
-      word: 'Emeel',
-      pronunciation: 'Эмээл',
-      date: 'NOVEMBER 30, 2025',
-      image: "/emeel.png"
-    },
-    {
-      word: 'regnant',
-      pronunciation: 'reg-nuhnt',
-      date: 'NOVEMBER 30, 2025',
-      image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop'
-    },
-    {
-      word: 'regnant',
-      pronunciation: 'reg-nuhnt',
-      date: 'NOVEMBER 30, 2025',
-      image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=300&fit=crop'
+  const routeMap = {
+    'Home': '/home',
+    'Game': '/game',
+    'Culture': '/culture',
+  };
+
+  const tabFromPath = (path) => {
+    const p = (path || '').toLowerCase();
+    if (p === '/home' || p === '/') return 'Home';
+    if (p === '/game') return 'Game';
+    if (p === '/culture') return 'Culture';
+    return 'Home';
+  };
+
+  const navigateTo = (tab) => {
+    const path = routeMap[tab] || '/home';
+    setActiveTab(tab);
+    window.history.pushState({ tab }, '', path);
+  };
+
+  useEffect(() => {
+    if (window.location.pathname === '/') {
+      window.history.replaceState({ tab: 'Home' }, '', '/home');
     }
-  ];
+    setActiveTab(tabFromPath(window.location.pathname));
+    const onPop = () => setActiveTab(tabFromPath(window.location.pathname));
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
-  const sendMessage = () => {
-    if (chatMessage.trim()) {
-      setMessages([...messages, 
-        { text: chatMessage, isUser: true },
-        { text: 'Таны асуултыг ойлгож байна. Би танд тусалж чадна! 🎯', isUser: false }
-      ]);
-      setChatMessage('');
+const wordCards = [
+  {
+    word: 'Эмээл',
+    pronunciation: 'Emeel',
+    date: 'NOVEMBER 30, 2025',
+    image: "/emeel.png",
+    meaning: 'Морь унахад хүнийг тухтай, тогтвортой суулгах зориулалттай мод, арьсаар хийсэн суудал.',
+    examples: [
+      'Эмээл нь унах үед тэнцвэрийг хамгаалдаг.',
+      'Зөв эмээл тавих нь морийг зовоохгүй, унахад илүү хялбар болгодог.',
+      'Уламжлалт эмээл арьс, модоор хийгддэг.'
+    ]
+  },
+  {
+    word: 'Хазаар',
+    pronunciation: 'Hazaar',
+    date: 'NOVEMBER 30, 2025',
+    image: "/hazaar.png",
+    meaning: 'Морьдын толгойд углаж, амьтныг барьж жолоодох зориулалттай тоног хэрэгсэл.',
+    examples: [
+      'Хазаарыг зөөлөн жолоодсоноор морь тайван явдаг.',
+      'Хазаар сайн таарсан бол морь илүү захирагдмал болдог.',
+      'Уралдаанчид хазаар барилтаараа морийг хурд, чиглэлд оруулдаг.'
+    ]
+  },
+  {
+    word: 'Унь',
+    pronunciation: 'Uni',
+    date: 'NOVEMBER 30, 2025',
+    image: "/uni.png",
+    meaning: 'Монгол гэрийн дээврийг тогтоох нарийн урт мод, тооноос хананд хүрч тогтдог хэсэг.',
+    examples: [
+      'Унь нь тооно болон хананд холбогдож гэрийн дээврийг бүрдүүлдэг.',
+      'Гэрийн бат бөх байдалд уньнуудын зөв байрлал чухал.',
+      'Унь олон тоогоор нийлж гэрийн дээвэр бүтдэг.'
+    ]
+  },
+  {
+    word: 'Тооно',
+    pronunciation: 'Toono',
+    date: 'NOVEMBER 30, 2025',
+    image: "/toono.png",
+    meaning: 'Гэрийн орой дээр байрлах дугуй цагираг бөгөөд уньнуудыг түгжин барьдаг хэсэг.',
+    examples: [
+      'Тооноор гэрт гэрэл, агаар ордог.',
+      'Гэрийн дээврийг тогтвортой барихад тооно чухал үүрэгтэй.',
+      'Өвөл тооноор утаа гардаг учир утааны зам болдог.'
+    ]
+  },
+  {
+    word: 'Багана',
+    pronunciation: 'Bagana',
+    date: 'NOVEMBER 30, 2025',
+    image: "/bagana.png",
+    meaning: 'Гэр болон барилгын гол ачааг даах босоо тулгуур мод.',
+    examples: [
+      'Гэрийн багана дээврийг дааж тогтоодог.',
+      'Баганыг сайн модоор хийх нь гэрийн бат бөх байдлыг нэмэгдүүлдэг.',
+      'Багана унах нь гэр бүхэлдээ тогтворгүй болох эрсдэлтэй.'
+    ]
+  },
+  {
+    word: 'Хана',
+    pronunciation: 'Hana',
+    date: 'NOVEMBER 30, 2025',
+    image: "/hana.png",
+    meaning: 'Гэрийн нударган тор маягийн эвхэгддэг хашлага хэсэг.',
+    examples: [
+      'Хананууд эвхэгддэг учир нүүхэд маш авсаархан.',
+      'Гэрийн дулаан хадгалахад ханыг сайтар уядаг.',
+      'Хана олон зангидаатай тул маш бат бөх байдаг.'
+    ]
+  },
+  {
+    word: 'Угалз',
+    pronunciation: 'Ugalz',
+    date: 'NOVEMBER 30, 2025',
+    image: "/ugalz.png",
+    meaning: 'Монгол урлагт хэрэглэгддэг уран нуман, мушгиа хээг хэлнэ.',
+    examples: [
+      'Угалз хээ нь эв нэгдэл, төгс өрнөлийн бэлгэдэлтэй.',
+      'Тавилга, хувцас, барилгын чимэглэлд өргөн хэрэглэгддэг.',
+      'Уламжлалт урчууд угалзыг нарийн гар ажиллагаагаар зурдаг.'
+    ]
+  },
+  {
+    word: 'Уурга',
+    pronunciation: 'Urga',
+    date: 'NOVEMBER 30, 2025',
+    image: "/uurga.png",
+    meaning: 'Морь, мал барихад хэрэглэдэг урт модон саваа, үзүүрт нь уяа хийсэн хэрэгсэл.',
+    examples: [
+      'Уургаар адуу барих нь монголчуудын эртний арга.',
+      'Уурга урт байх тусам мал барихад хялбар болдог.',
+      'Адууны уяа уурганд сайн тохирдог.'
+    ]
+  },
+  {
+    word: 'Торго',
+    pronunciation: 'Torgo',
+    date: 'NOVEMBER 30, 2025',
+    image: "/torgo.png",
+    meaning: 'Монголчуудын уламжлалт тансаг даавуу, ихэвчлэн торгон утсаар нэхэгдсэн.',
+    examples: [
+      'Торгоор дээл хийвэл маш гоёмсог болдог.',
+      'Эрт цагт торгыг ховор тансаг эд гэж үздэг байсан.',
+      'Торгоны өнгө нь баяр ёслолд онцгой хэрэглэгддэг.'
+    ]
+  },
+  {
+    word: 'Дээл',
+    pronunciation: 'Deel',
+    date: 'NOVEMBER 30, 2025',
+    image: "/deel.png",
+    meaning: 'Монголчуудын уламжлалт үндэсний хувцас.',
+    examples: [
+      'Дээл нь улирал бүрт өөр өөр материалаар хийгддэг.',
+      'Наадмын үеэр хүмүүс гоёмсог дээл өмсдөг.',
+      'Дээл нь монголчуудын соёлын бэлгэдэл.'
+    ]
+  },
+  {
+    word: 'Нэхий',
+    pronunciation: 'Nekhii',
+    date: 'NOVEMBER 30, 2025',
+    image: "/nekhii.png",
+    meaning: 'Малын арьсыг боловсруулж, дулаан хадгалах зориулалттай эдлэл.',
+    examples: [
+      'Нэхий дээл өвөл дулаан байдаг.',
+      'Нэхийгээр гутал, дээл хийдэг.',
+      'Нэхий нь монголчуудын өвлийн гол хэрэглээ.'
+    ]
+  },
+  {
+    word: 'Тулга',
+    pronunciation: 'Tulga',
+    date: 'NOVEMBER 30, 2025',
+    image: "/tulga.png",
+    meaning: 'Гэрийн голд байрлах гурван чулуу, гал түлэх суурь.',
+    examples: [
+      'Тулганд гал асаах нь гэрийн амьдралын эхлэл.',
+      'Тулга гурван чулуугаар тогтоно.',
+      'Тулга нь монголчуудын ахуйд галын төвийг илэрхийлдэг.'
+    ]
+  },
+];
+
+
+
+  const mnNorm = (s) => (s || '').toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/ө/g, 'о')
+    .replace(/ү/g, 'у');
+  const cyrToAscii = (s) => (s || '').toLowerCase()
+    .replace(/а/g, 'a')
+    .replace(/б/g, 'b')
+    .replace(/в/g, 'v')
+    .replace(/г/g, 'g')
+    .replace(/д/g, 'd')
+    .replace(/е/g, 'e')
+    .replace(/ё/g, 'e')
+    .replace(/ж/g, 'j')
+    .replace(/з/g, 'z')
+    .replace(/и/g, 'i')
+    .replace(/й/g, 'i')
+    .replace(/к/g, 'k')
+    .replace(/л/g, 'l')
+    .replace(/м/g, 'm')
+    .replace(/н/g, 'n')
+    .replace(/о/g, 'o')
+    .replace(/ө/g, 'o')
+    .replace(/п/g, 'p')
+    .replace(/р/g, 'r')
+    .replace(/с/g, 's')
+    .replace(/т/g, 't')
+    .replace(/у/g, 'u')
+    .replace(/ү/g, 'u')
+    .replace(/ф/g, 'f')
+    .replace(/х/g, 'h')
+    .replace(/ц/g, 'ts')
+    .replace(/ч/g, 'ch')
+    .replace(/ш/g, 'sh')
+    .replace(/щ/g, 'sh')
+    .replace(/ъ/g, '')
+    .replace(/ь/g, '')
+    .replace(/ы/g, 'y')
+    .replace(/э/g, 'e')
+    .replace(/ю/g, 'yu')
+    .replace(/я/g, 'ya');
+
+  const filteredWordCards = (() => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return wordCards;
+    const qNorm = mnNorm(q);
+    const qAscii = q.replace(/[öÖ]/g, 'o').replace(/[üÜ]/g, 'u');
+    return wordCards.filter((item) => {
+      const w = (item.word || '');
+      const p = (item.pronunciation || '');
+      const m = (item.meaning || '');
+      const exs = Array.isArray(item.examples) ? item.examples : [];
+      if (mnNorm(w).includes(qNorm)) return true;
+      if (mnNorm(m).includes(qNorm)) return true;
+      if (exs.some(ex => mnNorm(ex).includes(qNorm))) return true;
+      if (p.toLowerCase().includes(qAscii)) return true;
+      if (cyrToAscii(w).includes(qAscii)) return true;
+      return false;
+    });
+  })();
+
+  const buildExplanation = (query) => {
+    const q = (query || '').toLowerCase().trim();
+    if (!q) return 'Please enter a word to explain.';
+    const tokens = q.split(/[^a-zA-ZА-Яа-яҮүӨөЁё]+/).filter(Boolean);
+    const matchBy = (item) => {
+      const w = (item.word || '').toLowerCase();
+      const p = (item.pronunciation || '').toLowerCase();
+      if (q === w || q === p) return true;
+      if (q.includes(w) || q.includes(p)) return true;
+      return tokens.some(t => w === t || p === t);
+    };
+    const found = wordCards.find(matchBy);
+    if (!found) {
+      const suggest = wordCards.slice(0, 5).map(it => `${it.word} [${it.pronunciation}]`).join(', ');
+      return `I could not find that word in today’s cards.
+Try asking about: ${suggest}`;
     }
+    const lines = [
+      `${found.word} [${found.pronunciation}]`,
+      `Meaning: ${found.meaning}`,
+      `Examples:`,
+      ...found.examples.map((ex, i) => `- ${ex}`)
+    ];
+    return lines.join('\n');
+  };
+  const askAI = async (query) => {
+    const key = process.env.REACT_APP_OPENAI_API_KEY;
+    const model = process.env.REACT_APP_OPENAI_MODEL || 'gpt-4o-mini';
+    const url = process.env.REACT_APP_OPENAI_URL || 'https://api.openai.com/v1/chat/completions';
+    if (!key) return null;
+    const sys = 'Та Монгол хэлний толь бичиг шиг үгийг тайлбарлаж, богино тодорхойлолт, 2-3 жишээ өгүүлбэрээр хариулна. Хариултаа товч, ойлгомжтой бичнэ.';
+    const body = { model, messages: [ { role: 'system', content: sys }, { role: 'user', content: query } ], temperature: 0.2 };
+    try {
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
+      const data = await res.json();
+      const text = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      return text || null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const sendMessage = async () => {
+    const input = chatMessage.trim();
+    if (!input || isAiBusy) return;
+    setChatMessage('');
+    setMessages(prev => [...prev, { text: input, isUser: true }]);
+    setIsAiBusy(true);
+    const ai = await askAI(input);
+    const reply = ai || buildExplanation(input);
+    setMessages(prev => [...prev, { text: reply, isUser: false }]);
+    setIsAiBusy(false);
   };
 
   // Хэрэв Game хуудас бол GamePage харуулах
@@ -149,13 +416,16 @@ export default function DictionaryApp() {
               gap: '8px'
             }}>
               {tabs.map((tab) => (
-                <button
+              
+
+                  <button
                   key={tab}
                   onClick={() => {
                     if (tab === 'Game') {
                       setCurrentPage('game');
                     } else {
                       setActiveTab(tab);
+                      navigateTo(tab);   // ← энд нэгтгэж бичих
                     }
                   }}
                   style={{
@@ -184,6 +454,7 @@ export default function DictionaryApp() {
                 >
                   {tab}
                 </button>
+                
               ))}
             </nav>
 
@@ -228,6 +499,8 @@ export default function DictionaryApp() {
                     } else {
                       setActiveTab(tab);
                     }
+
+                    navigateTo(tab);
                     setIsMobileMenuOpen(false);
                   }}
                   style={{
@@ -252,281 +525,22 @@ export default function DictionaryApp() {
 
       {/* Main Content */}
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 20px' }}>
-        <div style={{ 
-          display: 'grid',
-          gridTemplateColumns: window.innerWidth >= 1024 ? '2fr 1fr' : '1fr',
-          gap: '32px'
-        }}>
+        {activeTab === 'Game' ? (
+          <GamePage onBack={() => navigateTo('Home')} sourceWords={wordCards} />
+        ) : activeTab === 'Culture' ? (
+          <CulturePage />
+        ) : (
+          <HomePage
+            items={filteredWordCards}
+            expanded={expandedCards}
+            setExpanded={setExpandedCards}
+            messages={messages}
+            chatMessage={chatMessage}
+            setChatMessage={setChatMessage}
+          sendMessage={sendMessage}
+          />
           
-          {/* Word Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {wordCards.map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  borderRadius: '24px',
-                  padding: '32px',
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-                  transition: 'all 0.3s',
-                  cursor: 'pointer',
-                  border: '1px solid rgba(147, 51, 234, 0.1)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-8px)';
-                  e.currentTarget.style.boxShadow = '0 20px 60px rgba(102, 126, 234, 0.2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.1)';
-                }}
-              >
-                <div style={{ 
-                  display: 'flex',
-                  flexDirection: window.innerWidth >= 768 ? 'row' : 'column',
-                  gap: '24px',
-                  alignItems: window.innerWidth >= 768 ? 'center' : 'flex-start'
-                }}>
-                  {/* Word Info */}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <span style={{
-                        padding: '4px 12px',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        borderRadius: '20px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>
-                        WORD OF THE DAY
-                      </span>
-                      <span style={{ fontSize: '16px' }}>✨</span>
-                    </div>
-                    
-                    <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '16px' }}>
-                      {item.date}
-                    </p>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                      <h2 style={{
-                        fontSize: '48px',
-                        fontWeight: '800',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        margin: 0
-                      }}>
-                        {item.word}
-                      </h2>
-                      <button style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        border: 'none',
-                        background: '#f3e8ff',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.3s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#e9d5ff';
-                        e.currentTarget.style.transform = 'scale(1.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#f3e8ff';
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                      >
-                        <svg width="20" height="20" fill="none" stroke="#9333ea" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
-                        </svg>
-                      </button>
-                    </div>
-                    
-                    <p style={{ 
-                      fontFamily: 'monospace',
-                      fontSize: '18px',
-                      color: '#6b7280',
-                      marginBottom: '16px'
-                    }}>
-                      [{item.pronunciation}]
-                    </p>
-                    
-                    <button style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#9333ea',
-                      fontWeight: '600',
-                      fontSize: '16px',
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '4px',
-                      transition: 'color 0.3s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#ec4899'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#9333ea'}
-                    >
-                      Meaning and examples →
-                    </button>
-                  </div>
-
-                  {/* Image */}
-                  <div style={{ position: 'relative', width: '192px', height: '192px' }}>
-                    <div style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      borderRadius: '16px',
-                      transform: 'rotate(3deg)',
-                      transition: 'transform 0.3s'
-                    }}></div>
-                    <img
-                      src={item.image}
-                      alt={item.word}
-                      style={{
-                        position: 'relative',
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '16px',
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-                        transition: 'transform 0.3s'
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Chatbot */}
-          <div>
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '24px',
-              overflow: 'hidden',
-              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-              position: 'sticky',
-              top: '100px',
-              border: '1px solid rgba(147, 51, 234, 0.1)'
-            }}>
-              {/* Chat Header */}
-              <div style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                padding: '24px',
-                color: 'white'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <span style={{ fontSize: '24px' }}>✨</span>
-                  </div>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>AI Туслах</h3>
-                    <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>Таны хэлний хамтрагч</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Chat Messages */}
-              <div style={{
-                height: '400px',
-                overflowY: 'auto',
-                padding: '24px',
-                background: 'linear-gradient(to bottom, rgba(243, 232, 255, 0.3), rgba(251, 207, 232, 0.3))',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px'
-              }}>
-                {messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      padding: '16px',
-                      borderRadius: '16px',
-                      maxWidth: '80%',
-                      alignSelf: msg.isUser ? 'flex-end' : 'flex-start',
-                      background: msg.isUser 
-                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                        : 'white',
-                      color: msg.isUser ? 'white' : '#374151',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                      border: msg.isUser ? 'none' : '1px solid rgba(147, 51, 234, 0.1)'
-                    }}
-                  >
-                    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
-                      {msg.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Chat Input */}
-              <div style={{
-                padding: '16px',
-                background: 'white',
-                borderTop: '1px solid rgba(147, 51, 234, 0.1)'
-              }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="text"
-                    placeholder="Асуулт асуух..."
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                    style={{
-                      flex: 1,
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      border: '2px solid #e9d5ff',
-                      outline: 'none',
-                      fontSize: '14px'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#9333ea'}
-                    onBlur={(e) => e.target.style.borderColor = '#e9d5ff'}
-                  />
-                  <button
-                    onClick={sendMessage}
-                    style={{
-                      padding: '12px 24px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontWeight: '600',
-                      fontSize: '18px',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s',
-                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                      e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
-                    }}
-                  >
-                    →
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
