@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import GamePage from '/Users/butentemvvlentem/Bagshnar /my-app/src/game.jsx';  
 
 export default function DictionaryApp() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('Games');
+  const [activeTab, setActiveTab] = useState('Home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState('home');
   const [messages, setMessages] = useState([
     { text: 'Сайн байна уу! Би танд үг тайлбарлах, жишээ өгөх асуудлаар туслах бэлэн байна. 😊', isUser: false }
   ]);
@@ -41,6 +43,11 @@ export default function DictionaryApp() {
       setChatMessage('');
     }
   };
+
+  // Хэрэв Game хуудас бол GamePage харуулах
+  if (currentPage === 'game') {
+    return <GamePage onBack={() => setCurrentPage('home')} />;
+  }
 
   return (
     <div style={{
@@ -144,7 +151,13 @@ export default function DictionaryApp() {
               {tabs.map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    if (tab === 'Game') {
+                      setCurrentPage('game');
+                    } else {
+                      setActiveTab(tab);
+                    }
+                  }}
                   style={{
                     padding: '10px 20px',
                     borderRadius: '12px',
@@ -210,7 +223,11 @@ export default function DictionaryApp() {
                 <button
                   key={tab}
                   onClick={() => {
-                    setActiveTab(tab);
+                    if (tab === 'Game') {
+                      setCurrentPage('game');
+                    } else {
+                      setActiveTab(tab);
+                    }
                     setIsMobileMenuOpen(false);
                   }}
                   style={{
