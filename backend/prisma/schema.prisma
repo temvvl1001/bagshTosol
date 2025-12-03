@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CareerConversation {
+  id        Int             @id @default(autoincrement())
+  createdAt DateTime        @default(now())
+  messages  CareerMessage[]
+}
+
+model CareerMessage {
+  id             Int                @id @default(autoincrement())
+  conversationId Int
+  conversation   CareerConversation @relation(fields: [conversationId], references: [id])
+  role           String
+  text           String
+  createdAt      DateTime           @default(now())
+}
+
+model GameQuestion {
+  id        Int      @id @default(autoincrement())
+  prompt    String
+  options   String[] // JSON-like string array for answer options
+  correct   Int
+  createdAt DateTime @default(now())
+}
+
+
+
