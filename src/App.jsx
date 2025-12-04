@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import GamePage from './game.jsx';
 import HomePage from './Home.jsx';
-import CulturePage from '/Users/butentemvvlentem/Desktop/bagshnarr/src/Culture.jsx';
+import CulturePage from './Culture.jsx';
 
 export default function DictionaryApp() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,7 +11,7 @@ export default function DictionaryApp() {
   const [chatMessage, setChatMessage] = useState('');
   const [currentPage, setCurrentPage] = useState('home');
   const [messages, setMessages] = useState([
-    { text: 'Сайн байна уу! Би танд үг тайлбарлах, жишээ өгөх асуудлаар туслах бэлэн байна. 😊', isUser: false }
+    { text: 'Сайн байна уу! Монголын өв, уламжлал, ахуй соёл, үг хэллэгийн талаар асуугаарай. 😊', isUser: false }
   ]);
   const [expandedCards, setExpandedCards] = useState({});
   const [isAiBusy, setIsAiBusy] = useState(false);
@@ -283,17 +283,17 @@ Try asking about: ${suggest}`;
     return lines.join('\n');
   };
   const askAI = async (query) => {
-    const key = process.env.REACT_APP_OPENAI_API_KEY;
-    const model = process.env.REACT_APP_OPENAI_MODEL || 'gpt-4o-mini';
-    const url = process.env.REACT_APP_OPENAI_URL || 'https://api.openai.com/v1/chat/completions';
-    if (!key) return null;
-    const sys = 'Та Монгол хэлний толь бичиг шиг үгийг тайлбарлаж, богино тодорхойлолт, 2-3 жишээ өгүүлбэрээр хариулна. Хариултаа товч, ойлгомжтой бичнэ.';
-    const body = { model, messages: [ { role: 'system', content: sys }, { role: 'user', content: query } ], temperature: 0.2 };
     try {
-      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
+      const res = await fetch('/api/career-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: query }),
+      });
       const data = await res.json();
-      const text = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      return text || null;
+      if (data?.error) {
+        return `Алдаа: ${data.error}`;
+      }
+      return data?.answer || null;
     } catch (e) {
       return null;
     }

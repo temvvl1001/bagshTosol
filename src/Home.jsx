@@ -169,7 +169,7 @@ export default function HomePage({ items, expanded, setExpanded, messages, chatM
               </div>
               <div>
                 <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>AI Туслах</h3>
-                <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>Таны хэлний хамтрагч</p>
+                <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>Монголын өв, уламжлалын тайлбарлагч</p>
               </div>
             </div>
           </div>

@@ -15,9 +15,16 @@ export default function CulturePage() {
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
         backgroundClip: 'text',
-        margin: 0
-      }}>Culture</h2>
-      
+        marginBottom: '16px'
+      }}>Монголын соёл, өв уламжлал</h2>
+      <p style={{
+        fontSize: '16px',
+        color: '#6b7280',
+        lineHeight: 1.7
+      }}>
+        Энэ хэсэгт та монголын түүхэн өв, уламжлалт соёл, ахуй, зан үйл, байгалийн онцлогийн талаарх мэдээллийг олж болно.
+        Хэрэв танд асуух зүйл байвал Home хуудсын AI Туслах-аар дамжуулан асуугаарай.
+      </p>
     </div>
   );
 }

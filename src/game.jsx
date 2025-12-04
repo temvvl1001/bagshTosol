@@ -1,28 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function GamePage({ onBack }) {
     const [score, setScore] = useState(0);
     const [currentQuestion, setCurrentQuestion] = useState(0);
+    const [questions, setQuestions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     
-    const questions = [
-      {
-        word: 'Сайн байна уу?',
-        options: ['Hello', 'Goodbye', 'Thank you', 'Welcome'],
-        correct: 0
-      },
-      {
-        word: 'Баярлалаа',
-        options: ['Sorry', 'Please', 'Thank you', 'Yes'],
-        correct: 2
-      },
-      {
-        word: 'Тийм',
-        options: ['No', 'Yes', 'Maybe', 'Never'],
-        correct: 1
-      }
-    ];
+    useEffect(() => {
+      const fetchQuestions = async () => {
+        try {
+          const res = await fetch('/api/game-questions');
+          if (!res.ok) throw new Error('Асуултуудыг татаж чадсангүй');
+          const data = await res.json();
+          setQuestions(data);
+          setLoading(false);
+        } catch (err) {
+          setError(err.message);
+          setLoading(false);
+        }
+      };
+      fetchQuestions();
+    }, []);
   
     const handleAnswer = (selectedIndex) => {
+      if (!questions || questions.length === 0) return;
+      
       if (selectedIndex === questions[currentQuestion].correct) {
         setScore(score + 1);
         alert('Зөв! ✅');
@@ -87,41 +90,6 @@ export default function GamePage({ onBack }) {
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
                 }}>LEXICON</h1>
-              </div>
-
-              {/* Search Bar */}
-              <div style={{ 
-                flex: 1,
-                maxWidth: '600px',
-                margin: '0 32px',
-                position: 'relative'
-              }}>
-                <input
-                  type="text"
-                  placeholder="Үг эсвэл хэллэг хайх..."
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px 12px 48px',
-                    borderRadius: '16px',
-                    border: '2px solid #e9d5ff',
-                    outline: 'none',
-                    fontSize: '16px',
-                    transition: 'all 0.3s'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#9333ea'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9d5ff'}
-                />
-                <svg style={{
-                  position: 'absolute',
-                  left: '16px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '20px',
-                  height: '20px',
-                  color: '#9333ea'
-                }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
               </div>
 
               {/* Navigation */}
@@ -206,71 +174,87 @@ export default function GamePage({ onBack }) {
                 Үг тоглуулах 🎮
               </h1>
               
-              <div style={{
-                fontSize: '18px',
-                color: '#6b7280',
-                marginBottom: '32px'
-              }}>
-                Асуулт {currentQuestion + 1}/{questions.length} | Оноо: {score}
-              </div>
-    
-              <div style={{
-                background: 'linear-gradient(135deg, #f3e8ff 0%, #fce7f3 100%)',
-                padding: '32px',
-                borderRadius: '16px',
-                marginBottom: '32px'
-              }}>
-                <h2 style={{
-                  fontSize: '36px',
-                  fontWeight: '700',
-                  color: '#374151',
-                  margin: '0 0 16px 0'
-                }}>
-                  {questions[currentQuestion].word}
-                </h2>
-                <p style={{ fontSize: '18px', color: '#6b7280', margin: 0 }}>
-                  Энэ үгийг англиар орчуул:
-                </p>
-              </div>
-    
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '16px'
-              }}>
-                {questions[currentQuestion].options.map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleAnswer(index)}
-                    style={{
-                      padding: '24px',
-                      background: 'white',
-                      border: '2px solid #e9d5ff',
-                      borderRadius: '16px',
-                      fontSize: '20px',
-                      fontWeight: '600',
+              {loading ? (
+                <div style={{ fontSize: '18px', color: '#6b7280', padding: '40px' }}>
+                  Асуултууд ачааллаж байна...
+                </div>
+              ) : error ? (
+                <div style={{ fontSize: '18px', color: '#ef4444', padding: '40px' }}>
+                  Алдаа: {error}
+                </div>
+              ) : questions.length === 0 ? (
+                <div style={{ fontSize: '18px', color: '#6b7280', padding: '40px' }}>
+                  Асуулт олдсонгүй. Backend дээр асуулт нэмнэ үү.
+                </div>
+              ) : (
+                <>
+                  <div style={{
+                    fontSize: '18px',
+                    color: '#6b7280',
+                    marginBottom: '32px'
+                  }}>
+                    Асуулт {currentQuestion + 1}/{questions.length} | Оноо: {score}
+                  </div>
+        
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f3e8ff 0%, #fce7f3 100%)',
+                    padding: '32px',
+                    borderRadius: '16px',
+                    marginBottom: '32px'
+                  }}>
+                    <h2 style={{
+                      fontSize: '36px',
+                      fontWeight: '700',
                       color: '#374151',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                      e.currentTarget.style.color = 'white';
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                      e.currentTarget.style.borderColor = 'transparent';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'white';
-                      e.currentTarget.style.color = '#374151';
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.borderColor = '#e9d5ff';
-                    }}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+                      margin: '0 0 16px 0'
+                    }}>
+                      {questions[currentQuestion].word}
+                    </h2>
+                    <p style={{ fontSize: '18px', color: '#6b7280', margin: 0 }}>
+                      Энэ үгийг англиар орчуул:
+                    </p>
+                  </div>
+        
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '16px'
+                  }}>
+                    {questions[currentQuestion].options.map((option, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswer(index)}
+                        style={{
+                          padding: '24px',
+                          background: 'white',
+                          border: '2px solid #e9d5ff',
+                          borderRadius: '16px',
+                          fontSize: '20px',
+                          fontWeight: '600',
+                          color: '#374151',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                          e.currentTarget.style.color = 'white';
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                          e.currentTarget.style.borderColor = 'transparent';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'white';
+                          e.currentTarget.style.color = '#374151';
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.borderColor = '#e9d5ff';
+                        }}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

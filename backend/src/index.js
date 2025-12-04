@@ -164,10 +164,10 @@ app.get('/api/game-questions', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
-  console.log(`✅ Backend сервер ${3000} порт дээр ажиллаж байна`);
+  console.log(`✅ Backend сервер ${PORT} порт дээр ажиллаж байна`);
 });
 
 
