@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import GamePage from '/Users/butentemvvlentem/Bagshnar /my-app/src/game.jsx';
-import HomePage from '/Users/butentemvvlentem/Bagshnar /my-app/src/Home.jsx';
-import CulturePage from '/Users/butentemvvlentem/Bagshnar /my-app/src/Culture.jsx';
+import GamePage from './game.jsx';
+import HomePage from './Home.jsx';
+import CulturePage from '/Users/butentemvvlentem/Desktop/bagshnarr/src/Culture.jsx';
 
 export default function DictionaryApp() {
   const [searchQuery, setSearchQuery] = useState('');
