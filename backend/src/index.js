@@ -164,6 +164,62 @@ app.get('/api/game-questions', async (req, res) => {
   }
 });
 
+// Үгийн асуултууд (Home дээрх үгсээс)
+const wordCards = [
+  { word: 'Эмээл', pronunciation: 'Emeel', meaning: 'Морь унахад хүнийг тухтай, тогтвортой суулгах зориулалттай мод, арьсаар хийсэн суудал.', image: '/emeel.png' },
+  { word: 'Хазаар', pronunciation: 'Hazaar', meaning: 'Морьдын толгойд углаж, амьтныг барьж жолоодох зориулалттай тоног хэрэгсэл.', image: '/hazaar.png' },
+  { word: 'Унь', pronunciation: 'Uni', meaning: 'Монгол гэрийн дээврийг тогтоох нарийн урт мод, тооноос хананд хүрч тогтдог хэсэг.', image: '/uni.png' },
+  { word: 'Тооно', pronunciation: 'Toono', meaning: 'Гэрийн орой дээр байрлах дугуй цагираг бөгөөд уньнуудыг түгжин барьдаг хэсэг.', image: '/toono.png' },
+  { word: 'Багана', pronunciation: 'Bagana', meaning: 'Гэр болон барилгын гол ачааг даах босоо тулгуур мод.', image: '/bagana.png' },
+  { word: 'Хана', pronunciation: 'Hana', meaning: 'Гэрийн нударган тор маягийн эвхэгддэг хашлага хэсэг.', image: '/hana.png' },
+  { word: 'Угалз', pronunciation: 'Ugalz', meaning: 'Монгол урлагт хэрэглэгддэг уран нуман, мушгиа хээг хэлнэ.', image: '/ugalz.png' },
+  { word: 'Уурга', pronunciation: 'Urga', meaning: 'Морь, мал барихад хэрэглэдэг урт модон саваа, үзүүрт нь уяа хийсэн хэрэгсэл.', image: '/uurga.png' },
+  { word: 'Торго', pronunciation: 'Torgo', meaning: 'Монголчуудын уламжлалт тансаг даавуу, ихэвчлэн торгон утсаар нэхэгдсэн.', image: '/torgo.png' },
+  { word: 'Дээл', pronunciation: 'Deel', meaning: 'Монголчуудын уламжлалт үндэсний хувцас.', image: '/deel.png' },
+  { word: 'Нэхий', pronunciation: 'Nekhii', meaning: 'Малын арьсыг боловсруулж, дулаан хадгалах зориулалттай эдлэл.', image: '/nekhii.png' },
+  { word: 'Тулга', pronunciation: 'Tulga', meaning: 'Гэрийн голд байрлах гурван чулуу, гал түлэх суурь.', image: '/tulga.png' },
+];
+
+app.get('/api/word-questions', (req, res) => {
+  try {
+    // Үгсийг санамсаргүй байдлаар холих
+    const shuffled = [...wordCards].sort(() => Math.random() - 0.5);
+    // 6 үг авах
+    const selectedWords = shuffled.slice(0, 6);
+    
+    // Бүгдийг Quiz төрөл болгох - 4 сонголттой
+    const questions = selectedWords.map((card) => {
+      const correctAnswer = card.pronunciation;
+      
+      // 3 буруу хариулт авах
+      const wrongOptions = wordCards
+        .filter(w => w.pronunciation !== correctAnswer)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map(w => w.pronunciation);
+      
+      // 4 сонголтыг холих
+      const allOptions = [correctAnswer, ...wrongOptions]
+        .sort(() => Math.random() - 0.5);
+      
+      return {
+        type: 'quiz',
+        word: card.word,
+        pronunciation: card.pronunciation,
+        meaning: card.meaning,
+        image: card.image,
+        options: allOptions,
+        correctAnswer: correctAnswer
+      };
+    });
+    
+    res.json(questions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Асуултууд үүсгэж чадсангүй' });
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
