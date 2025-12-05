@@ -30,5 +30,13 @@ model GameQuestion {
   createdAt DateTime @default(now())
 }
 
-
-
+model WordCard {
+  id            Int      @id @default(autoincrement())
+  word          String
+  pronunciation String
+  date          String
+  image         String
+  meaning       String
+  examples      String[]
+  createdAt     DateTime @default(now())
+}

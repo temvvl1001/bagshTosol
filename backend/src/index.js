@@ -9,6 +9,18 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
+let dbAvailable = true;
+let memConvId = 1;
+const memConversations = new Map();
+async function initDb() {
+  try {
+    await prisma.$connect();
+  } catch (_) {
+    dbAvailable = false;
+  }
+}
+initDb();
+
 const groqApiKey = process.env.GROQ_API_KEY || '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';
 const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 
@@ -64,28 +76,26 @@ app.post('/api/career-chat', async (req, res) => {
         .json({ error: 'GROQ_API_KEY тохируулаагүй байна (backend).' });
     }
 
-    // Хэрэв conversationId ирээгүй бол шинэ яриа эхлүүлнэ
     let conversation;
-    if (conversationId) {
-      conversation = await prisma.careerConversation.findUnique({
-        where: { id: conversationId },
-      });
+    if (dbAvailable) {
+      if (conversationId) {
+        conversation = await prisma.careerConversation.findUnique({ where: { id: conversationId } });
+      }
+      if (!conversation) {
+        conversation = await prisma.careerConversation.create({ data: {} });
+      }
+      await prisma.careerMessage.create({ data: { conversationId: conversation.id, role: 'user', text: message } });
+    } else {
+      const idNum = Number(conversationId);
+      if (idNum && memConversations.has(idNum)) {
+        conversation = memConversations.get(idNum);
+      }
+      if (!conversation) {
+        conversation = { id: memConvId++, createdAt: new Date(), messages: [] };
+        memConversations.set(conversation.id, conversation);
+      }
+      conversation.messages.push({ role: 'user', text: message, createdAt: new Date() });
     }
-
-    if (!conversation) {
-      conversation = await prisma.careerConversation.create({
-        data: {},
-      });
-    }
-
-    // Хэрэглэгчийн мессежийг хадгалах
-    const userMsg = await prisma.careerMessage.create({
-      data: {
-        conversationId: conversation.id,
-        role: 'user',
-        text: message,
-      },
-    });
 
     const completion = await groq.chat.completions.create({
       model: groqModel,
@@ -102,17 +112,17 @@ app.post('/api/career-chat', async (req, res) => {
       completion?.choices?.[0]?.message?.content?.trim() ||
       'Одоогоор хариу гаргаж чадсангүй.';
 
-    const botMsg = await prisma.careerMessage.create({
-      data: {
-        conversationId: conversation.id,
-        role: 'assistant',
-        text: answer,
-      },
-    });
+    let replyText = answer;
+    if (dbAvailable) {
+      const botMsg = await prisma.careerMessage.create({ data: { conversationId: conversation.id, role: 'assistant', text: answer } });
+      replyText = botMsg.text;
+    } else {
+      conversation.messages.push({ role: 'assistant', text: answer, createdAt: new Date() });
+    }
 
     res.json({
       conversationId: conversation.id,
-      answer: botMsg.text,
+      answer: replyText,
     });
   } catch (err) {
     console.error(err);
@@ -128,16 +138,19 @@ app.get('/api/career-chat/:conversationId', async (req, res) => {
       return res.status(400).json({ error: 'conversationId буруу' });
     }
 
-    const conversation = await prisma.careerConversation.findUnique({
-      where: { id },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
-    });
-
-    if (!conversation) {
-      return res.status(404).json({ error: 'Яриа олдсонгүй' });
+    if (dbAvailable) {
+      const conversation = await prisma.careerConversation.findUnique({ where: { id }, include: { messages: { orderBy: { createdAt: 'asc' } } } });
+      if (!conversation) {
+        return res.status(404).json({ error: 'Яриа олдсонгүй' });
+      }
+      res.json(conversation);
+    } else {
+      if (!memConversations.has(id)) {
+        return res.status(404).json({ error: 'Яриа олдсонгүй' });
+      }
+      const conv = memConversations.get(id);
+      res.json(conv);
     }
-
-    res.json(conversation);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Дотоод серверийн алдаа' });
@@ -147,6 +160,9 @@ app.get('/api/career-chat/:conversationId', async (req, res) => {
 // Game-ийн асуултууд авах
 app.get('/api/game-questions', async (req, res) => {
   try {
+    if (!dbAvailable) {
+      return res.json([]);
+    }
     const questions = await prisma.gameQuestion.findMany({
       orderBy: { id: 'asc' },
     });
@@ -164,54 +180,208 @@ app.get('/api/game-questions', async (req, res) => {
   }
 });
 
-// Үгийн асуултууд (Home дээрх үгсээс)
 const wordCards = [
-  { word: 'Эмээл', pronunciation: 'Emeel', meaning: 'Морь унахад хүнийг тухтай, тогтвортой суулгах зориулалттай мод, арьсаар хийсэн суудал.', image: '/emeel.png' },
-  { word: 'Хазаар', pronunciation: 'Hazaar', meaning: 'Морьдын толгойд углаж, амьтныг барьж жолоодох зориулалттай тоног хэрэгсэл.', image: '/hazaar.png' },
-  { word: 'Унь', pronunciation: 'Uni', meaning: 'Монгол гэрийн дээврийг тогтоох нарийн урт мод, тооноос хананд хүрч тогтдог хэсэг.', image: '/uni.png' },
-  { word: 'Тооно', pronunciation: 'Toono', meaning: 'Гэрийн орой дээр байрлах дугуй цагираг бөгөөд уньнуудыг түгжин барьдаг хэсэг.', image: '/toono.png' },
-  { word: 'Багана', pronunciation: 'Bagana', meaning: 'Гэр болон барилгын гол ачааг даах босоо тулгуур мод.', image: '/bagana.png' },
-  { word: 'Хана', pronunciation: 'Hana', meaning: 'Гэрийн нударган тор маягийн эвхэгддэг хашлага хэсэг.', image: '/hana.png' },
-  { word: 'Угалз', pronunciation: 'Ugalz', meaning: 'Монгол урлагт хэрэглэгддэг уран нуман, мушгиа хээг хэлнэ.', image: '/ugalz.png' },
-  { word: 'Уурга', pronunciation: 'Urga', meaning: 'Морь, мал барихад хэрэглэдэг урт модон саваа, үзүүрт нь уяа хийсэн хэрэгсэл.', image: '/uurga.png' },
-  { word: 'Торго', pronunciation: 'Torgo', meaning: 'Монголчуудын уламжлалт тансаг даавуу, ихэвчлэн торгон утсаар нэхэгдсэн.', image: '/torgo.png' },
-  { word: 'Дээл', pronunciation: 'Deel', meaning: 'Монголчуудын уламжлалт үндэсний хувцас.', image: '/deel.png' },
-  { word: 'Нэхий', pronunciation: 'Nekhii', meaning: 'Малын арьсыг боловсруулж, дулаан хадгалах зориулалттай эдлэл.', image: '/nekhii.png' },
-  { word: 'Тулга', pronunciation: 'Tulga', meaning: 'Гэрийн голд байрлах гурван чулуу, гал түлэх суурь.', image: '/tulga.png' },
+  {
+    word: 'Эмээл',
+    pronunciation: 'Emeel',
+    date: 'NOVEMBER 30, 2025',
+    image: '/emeel.png',
+    meaning:
+      'Морь унахад хүнийг тухтай, тогтвортой суулгах зориулалттай мод, арьсаар хийсэн суудал.',
+    examples: [
+      'Эмээл нь унах үед тэнцвэрийг хамгаалдаг.',
+      'Зөв эмээл тавих нь морийг зовоохгүй, унахад илүү хялбар болгодог.',
+      'Уламжлалт эмээл арьс, модоор хийгддэг.'
+    ]
+  },
+  {
+    word: 'Хазаар',
+    pronunciation: 'Hazaar',
+    date: 'NOVEMBER 30, 2025',
+    image: '/hazaar.png',
+    meaning:
+      'Морьдын толгойд углаж, амьтныг барьж жолоодох зориулалттай тоног хэрэгсэл.',
+    examples: [
+      'Хазаарыг зөөлөн жолоодсоноор морь тайван явдаг.',
+      'Хазаар сайн таарсан бол морь илүү захирагдмал болдог.',
+      'Уралдаанчид хазаар барилтаараа морийг хурд, чиглэлд оруулдаг.'
+    ]
+  },
+  {
+    word: 'Унь',
+    pronunciation: 'Uni',
+    date: 'NOVEMBER 30, 2025',
+    image: '/uni.png',
+    meaning:
+      'Монгол гэрийн дээврийг тогтоох нарийн урт мод, тооноос хананд хүрч тогтдог хэсэг.',
+    examples: [
+      'Унь нь тооно болон хананд холбогдож гэрийн дээврийг бүрдүүлдэг.',
+      'Гэрийн бат бөх байдалд уньнуудын зөв байрлал чухал.',
+      'Унь олон тоогоор нийлж гэрийн дээвэр бүтдэг.'
+    ]
+  },
+  {
+    word: 'Тооно',
+    pronunciation: 'Toono',
+    date: 'NOVEMBER 30, 2025',
+    image: '/toono.png',
+    meaning:
+      'Гэрийн орой дээр байрлах дугуй цагираг бөгөөд уньнуудыг түгжин барьдаг хэсэг.',
+    examples: [
+      'Тооноор гэрт гэрэл, агаар ордог.',
+      'Гэрийн дээврийг тогтвортой барихад тооно чухал үүрэгтэй.',
+      'Өвөл тооноор утаа гардаг учир утааны зам болдог.'
+    ]
+  },
+  {
+    word: 'Багана',
+    pronunciation: 'Bagana',
+    date: 'NOVEMBER 30, 2025',
+    image: '/bagana.png',
+    meaning: 'Гэр болон барилгын гол ачааг даах босоо тулгуур мод.',
+    examples: [
+      'Гэрийн багана дээврийг дааж тогтоодог.',
+      'Баганыг сайн модоор хийх нь гэрийн бат бөх байдлыг нэмэгдүүлдэг.',
+      'Багана унах нь гэр бүхэлдээ тогтворгүй болох эрсдэлтэй.'
+    ]
+  },
+  {
+    word: 'Хана',
+    pronunciation: 'Hana',
+    date: 'NOVEMBER 30, 2025',
+    image: '/hana.png',
+    meaning: 'Гэрийн нударган тор маягийн эвхэгддэг хашлага хэсэг.',
+    examples: [
+      'Хананууд эвхэгддэг учир нүүхэд маш авсаархан.',
+      'Гэрийн дулаан хадгалахад ханыг сайтар уядаг.',
+      'Хана олон зангидаатай тул маш бат бөх байдаг.'
+    ]
+  },
+  {
+    word: 'Угалз',
+    pronunciation: 'Ugalz',
+    date: 'NOVEMBER 30, 2025',
+    image: '/ugalz.png',
+    meaning: 'Монгол урлагт хэрэглэгддэг уран нуман, мушгиа хээг хэлнэ.',
+    examples: [
+      'Угалз хээ нь эв нэгдэл, төгс өрнөлийн бэлгэдэлтэй.',
+      'Тавилга, хувцас, барилгын чимэглэлд өргөн хэрэглэгддэг.',
+      'Уламжлалт урчууд угалзыг нарийн гар ажиллагаагаар зурдаг.'
+    ]
+  },
+  {
+    word: 'Уурга',
+    pronunciation: 'Urga',
+    date: 'NOVEMBER 30, 2025',
+    image: '/uurga.png',
+    meaning:
+      'Морь, мал барихад хэрэглэдэг урт модон саваа, үзүүрт нь уяа хийсэн хэрэгсэл.',
+    examples: [
+      'Уургаар адуу барих нь монголчуудын эртний арга.',
+      'Уурга урт байх тусам мал барихад хялбар болдог.',
+      'Адууны уяа уурганд сайн тохирдог.'
+    ]
+  },
+  {
+    word: 'Торго',
+    pronunciation: 'Torgo',
+    date: 'NOVEMBER 30, 2025',
+    image: '/torgo.png',
+    meaning:
+      'Монголчуудын уламжлалт тансаг даавуу, ихэвчлэн торгон утсаар нэхэгдсэн.',
+    examples: [
+      'Торгоор дээл хийвэл маш гоёмсог болдог.',
+      'Эрт цагт торгыг ховор тансаг эд гэж үздэг байсан.',
+      'Торгоны өнгө нь баяр ёслолд онцгой хэрэглэгддэг.'
+    ]
+  },
+  {
+    word: 'Дээл',
+    pronunciation: 'Deel',
+    date: 'NOVEMBER 30, 2025',
+    image: '/deel.png',
+    meaning: 'Монголчуудын уламжлалт үндэсний хувцас.',
+    examples: [
+      'Дээл нь улирал бүрт өөр өөр материалаар хийгддэг.',
+      'Наадмын үеэр хүмүүс гоёмсог дээл өмсдөг.',
+      'Дээл нь монголчуудын соёлын бэлгэдэл.'
+    ]
+  },
+  {
+    word: 'Нэхий',
+    pronunciation: 'Nekhii',
+    date: 'NOVEMBER 30, 2025',
+    image: '/nekhii.png',
+    meaning:
+      'Малын арьсыг боловсруулж, дулаан хадгалах зориулалттай эдлэл.',
+    examples: [
+      'Нэхий дээл өвөл дулаан байдаг.',
+      'Нэхийгээр гутал, дээл хийдэг.',
+      'Нэхий нь монголчуудын өвлийн гол хэрэглээ.'
+    ]
+  },
+  {
+    word: 'Тулга',
+    pronunciation: 'Tulga',
+    date: 'NOVEMBER 30, 2025',
+    image: '/tulga.png',
+    meaning: 'Гэрийн голд байрлах гурван чулуу, гал түлэх суурь.',
+    examples: [
+      'Тулганд гал асаах нь гэрийн амьдралын эхлэл.',
+      'Тулга гурван чулуугаар тогтоно.',
+      'Тулга нь монголчуудын ахуйд галын төвийг илэрхийлдэг.'
+    ]
+  },
 ];
+
+let useInMemoryWords = false;
+async function initWords() {
+  try {
+    const count = await prisma.wordCard.count();
+    if (count === 0) {
+      await prisma.wordCard.createMany({
+        data: wordCards.map((w) => ({
+          word: w.word,
+          pronunciation: w.pronunciation,
+          date: w.date,
+          image: w.image,
+          meaning: w.meaning,
+          examples: w.examples,
+        })),
+      });
+    }
+  } catch (e) {
+    useInMemoryWords = true;
+  }
+}
+initWords();
+
+app.get('/api/word-cards', async (req, res) => {
+  try {
+    if (useInMemoryWords) {
+      return res.json(wordCards);
+    }
+    const items = await prisma.wordCard.findMany({ orderBy: { createdAt: 'asc' } });
+    res.json(items);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Үгс татахад алдаа гарлаа' });
+  }
+});
 
 app.get('/api/word-questions', (req, res) => {
   try {
-    // Үгсийг санамсаргүй байдлаар холих
     const shuffled = [...wordCards].sort(() => Math.random() - 0.5);
-    // 6 үг авах
+    
     const selectedWords = shuffled.slice(0, 6);
     
-    // Бүгдийг Quiz төрөл болгох - 4 сонголттой
-    const questions = selectedWords.map((card) => {
-      const correctAnswer = card.pronunciation;
-      
-      // 3 буруу хариулт авах
-      const wrongOptions = wordCards
-        .filter(w => w.pronunciation !== correctAnswer)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3)
-        .map(w => w.pronunciation);
-      
-      // 4 сонголтыг холих
-      const allOptions = [correctAnswer, ...wrongOptions]
-        .sort(() => Math.random() - 0.5);
-      
-      return {
-        type: 'quiz',
-        word: card.word,
-        pronunciation: card.pronunciation,
-        meaning: card.meaning,
-        image: card.image,
-        options: allOptions,
-        correctAnswer: correctAnswer
-      };
-    });
+    const questions = selectedWords.map((card) => ({
+      type: 'quiz',
+      word: card.word,
+      pronunciation: card.pronunciation,
+      meaning: card.meaning,
+      image: card.image,
+    }));
     
     res.json(questions);
   } catch (err) {
@@ -225,5 +395,3 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`✅ Backend сервер ${PORT} порт дээр ажиллаж байна`);
 });
-
-
