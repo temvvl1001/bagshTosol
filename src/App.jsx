@@ -20,14 +20,14 @@ export default function DictionaryApp() {
 
   const routeMap = {
     'Home': '/home',
-    'Game': '/game',
+    'Game': '/games',
     'Culture': '/culture',
   };
 
   const tabFromPath = (path) => {
     const p = (path || '').toLowerCase();
     if (p === '/home' || p === '/') return 'Home';
-    if (p === '/game') return 'Game';
+    if (p === '/games') return 'Game';
     if (p === '/culture') return 'Culture';
     return 'Home';
   };
@@ -48,152 +48,21 @@ export default function DictionaryApp() {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-const wordCards = [
-  {
-    word: 'Эмээл',
-    pronunciation: 'Emeel',
-    date: 'NOVEMBER 30, 2025',
-    image: "/emeel.png",
-    meaning: 'Морь унахад хүнийг тухтай, тогтвортой суулгах зориулалттай мод, арьсаар хийсэн суудал.',
-    examples: [
-      'Эмээл нь унах үед тэнцвэрийг хамгаалдаг.',
-      'Зөв эмээл тавих нь морийг зовоохгүй, унахад илүү хялбар болгодог.',
-      'Уламжлалт эмээл арьс, модоор хийгддэг.'
-    ]
-  },
-  {
-    word: 'Хазаар',
-    pronunciation: 'Hazaar',
-    date: 'NOVEMBER 30, 2025',
-    image: "/hazaar.png",
-    meaning: 'Морьдын толгойд углаж, амьтныг барьж жолоодох зориулалттай тоног хэрэгсэл.',
-    examples: [
-      'Хазаарыг зөөлөн жолоодсоноор морь тайван явдаг.',
-      'Хазаар сайн таарсан бол морь илүү захирагдмал болдог.',
-      'Уралдаанчид хазаар барилтаараа морийг хурд, чиглэлд оруулдаг.'
-    ]
-  },
-  {
-    word: 'Унь',
-    pronunciation: 'Uni',
-    date: 'NOVEMBER 30, 2025',
-    image: "/uni.png",
-    meaning: 'Монгол гэрийн дээврийг тогтоох нарийн урт мод, тооноос хананд хүрч тогтдог хэсэг.',
-    examples: [
-      'Унь нь тооно болон хананд холбогдож гэрийн дээврийг бүрдүүлдэг.',
-      'Гэрийн бат бөх байдалд уньнуудын зөв байрлал чухал.',
-      'Унь олон тоогоор нийлж гэрийн дээвэр бүтдэг.'
-    ]
-  },
-  {
-    word: 'Тооно',
-    pronunciation: 'Toono',
-    date: 'NOVEMBER 30, 2025',
-    image: "/toono.png",
-    meaning: 'Гэрийн орой дээр байрлах дугуй цагираг бөгөөд уньнуудыг түгжин барьдаг хэсэг.',
-    examples: [
-      'Тооноор гэрт гэрэл, агаар ордог.',
-      'Гэрийн дээврийг тогтвортой барихад тооно чухал үүрэгтэй.',
-      'Өвөл тооноор утаа гардаг учир утааны зам болдог.'
-    ]
-  },
-  {
-    word: 'Багана',
-    pronunciation: 'Bagana',
-    date: 'NOVEMBER 30, 2025',
-    image: "/bagana.png",
-    meaning: 'Гэр болон барилгын гол ачааг даах босоо тулгуур мод.',
-    examples: [
-      'Гэрийн багана дээврийг дааж тогтоодог.',
-      'Баганыг сайн модоор хийх нь гэрийн бат бөх байдлыг нэмэгдүүлдэг.',
-      'Багана унах нь гэр бүхэлдээ тогтворгүй болох эрсдэлтэй.'
-    ]
-  },
-  {
-    word: 'Хана',
-    pronunciation: 'Hana',
-    date: 'NOVEMBER 30, 2025',
-    image: "/hana.png",
-    meaning: 'Гэрийн нударган тор маягийн эвхэгддэг хашлага хэсэг.',
-    examples: [
-      'Хананууд эвхэгддэг учир нүүхэд маш авсаархан.',
-      'Гэрийн дулаан хадгалахад ханыг сайтар уядаг.',
-      'Хана олон зангидаатай тул маш бат бөх байдаг.'
-    ]
-  },
-  {
-    word: 'Угалз',
-    pronunciation: 'Ugalz',
-    date: 'NOVEMBER 30, 2025',
-    image: "/ugalz.png",
-    meaning: 'Монгол урлагт хэрэглэгддэг уран нуман, мушгиа хээг хэлнэ.',
-    examples: [
-      'Угалз хээ нь эв нэгдэл, төгс өрнөлийн бэлгэдэлтэй.',
-      'Тавилга, хувцас, барилгын чимэглэлд өргөн хэрэглэгддэг.',
-      'Уламжлалт урчууд угалзыг нарийн гар ажиллагаагаар зурдаг.'
-    ]
-  },
-  {
-    word: 'Уурга',
-    pronunciation: 'Urga',
-    date: 'NOVEMBER 30, 2025',
-    image: "/uurga.png",
-    meaning: 'Морь, мал барихад хэрэглэдэг урт модон саваа, үзүүрт нь уяа хийсэн хэрэгсэл.',
-    examples: [
-      'Уургаар адуу барих нь монголчуудын эртний арга.',
-      'Уурга урт байх тусам мал барихад хялбар болдог.',
-      'Адууны уяа уурганд сайн тохирдог.'
-    ]
-  },
-  {
-    word: 'Торго',
-    pronunciation: 'Torgo',
-    date: 'NOVEMBER 30, 2025',
-    image: "/torgo.png",
-    meaning: 'Монголчуудын уламжлалт тансаг даавуу, ихэвчлэн торгон утсаар нэхэгдсэн.',
-    examples: [
-      'Торгоор дээл хийвэл маш гоёмсог болдог.',
-      'Эрт цагт торгыг ховор тансаг эд гэж үздэг байсан.',
-      'Торгоны өнгө нь баяр ёслолд онцгой хэрэглэгддэг.'
-    ]
-  },
-  {
-    word: 'Дээл',
-    pronunciation: 'Deel',
-    date: 'NOVEMBER 30, 2025',
-    image: "/deel.png",
-    meaning: 'Монголчуудын уламжлалт үндэсний хувцас.',
-    examples: [
-      'Дээл нь улирал бүрт өөр өөр материалаар хийгддэг.',
-      'Наадмын үеэр хүмүүс гоёмсог дээл өмсдөг.',
-      'Дээл нь монголчуудын соёлын бэлгэдэл.'
-    ]
-  },
-  {
-    word: 'Нэхий',
-    pronunciation: 'Nekhii',
-    date: 'NOVEMBER 30, 2025',
-    image: "/nekhii.png",
-    meaning: 'Малын арьсыг боловсруулж, дулаан хадгалах зориулалттай эдлэл.',
-    examples: [
-      'Нэхий дээл өвөл дулаан байдаг.',
-      'Нэхийгээр гутал, дээл хийдэг.',
-      'Нэхий нь монголчуудын өвлийн гол хэрэглээ.'
-    ]
-  },
-  {
-    word: 'Тулга',
-    pronunciation: 'Tulga',
-    date: 'NOVEMBER 30, 2025',
-    image: "/tulga.png",
-    meaning: 'Гэрийн голд байрлах гурван чулуу, гал түлэх суурь.',
-    examples: [
-      'Тулганд гал асаах нь гэрийн амьдралын эхлэл.',
-      'Тулга гурван чулуугаар тогтоно.',
-      'Тулга нь монголчуудын ахуйд галын төвийг илэрхийлдэг.'
-    ]
-  },
-];
+const [wordCards, setWordCards] = useState([]);
+
+useEffect(() => {
+  let mounted = true;
+  (async () => {
+    try {
+      const res = await fetch('/api/word-cards');
+      const data = await res.json();
+      if (mounted) setWordCards(Array.isArray(data) ? data : []);
+    } catch (e) {
+      if (mounted) setWordCards([]);
+    }
+  })();
+  return () => { mounted = false; };
+}, []);
 
 
 
@@ -306,14 +175,14 @@ Try asking about: ${suggest}`;
     setMessages(prev => [...prev, { text: input, isUser: true }]);
     setIsAiBusy(true);
     const ai = await askAI(input);
-    const reply = ai || buildExplanation(input);
+    const reply = buildExplanation(input) || ai;
     setMessages(prev => [...prev, { text: reply, isUser: false }]);
     setIsAiBusy(false);
   };
 
-  // Хэрэв Game хуудас бол GamePage харуулах
+  // Хэрэв Game хуудас бол GamePage хар
   if (currentPage === 'game') {
-    return <GamePage onBack={() => setCurrentPage('home')} />;
+    return <GamePage onBack={() => setCurrentPage('home')} sourceWords={wordCards} />;
   }
 
   return (
@@ -420,14 +289,14 @@ Try asking about: ${suggest}`;
 
                   <button
                   key={tab}
-                  onClick={() => {
-                    if (tab === 'Game') {
-                      setCurrentPage('game');
-                    } else {
-                      setActiveTab(tab);
-                      navigateTo(tab);   // ← энд нэгтгэж бичих
-                    }
-                  }}
+                onClick={() => {
+                  if (tab === 'Game') {
+                    navigateTo('Game');
+                  } else {
+                    setActiveTab(tab);
+                    navigateTo(tab);   // ← энд нэгтгэж бичих
+                  }
+                }}
                   style={{
                     padding: '10px 20px',
                     borderRadius: '12px',

@@ -259,4 +259,3 @@ export default function HomePage({ items, expanded, setExpanded, messages, chatM
     </div>
   );
 }
-

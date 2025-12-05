@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function GamePage({ onBack }) {
+export default function GamePage({ onBack, sourceWords = [] }) {
     const [score, setScore] = useState(0);
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [questions, setQuestions] = useState([]);
@@ -17,8 +17,16 @@ export default function GamePage({ onBack }) {
         try {
           const res = await fetch('/api/word-questions');
           if (!res.ok) throw new Error('Асуултуудыг татаж чадсангүй');
-          const data = await res.json();
-          setQuestions(data);
+          const base = await res.json();
+          const pool = Array.isArray(sourceWords) && sourceWords.length ? sourceWords : base;
+          const enriched = base.map((q) => {
+            const correct = q.word;
+            const candidates = pool.filter(w => (w.word || '') !== correct);
+            const wrongs = candidates.sort(() => Math.random() - 0.5).slice(0, 3).map(w => w.word);
+            const options = [correct, ...wrongs].sort(() => Math.random() - 0.5);
+            return { ...q, options, correctAnswer: correct };
+          });
+          setQuestions(enriched);
           setLoading(false);
         } catch (err) {
           setError(err.message);
@@ -26,7 +34,7 @@ export default function GamePage({ onBack }) {
         }
       };
       fetchQuestions();
-    }, []);
+    }, [sourceWords]);
 
     const normalizeAnswer = (answer) => {
       return answer.toLowerCase().trim()
@@ -75,7 +83,7 @@ export default function GamePage({ onBack }) {
       } else {
         setFeedback({ 
           type: 'error', 
-          message: `❌ Буруу. Зөв хариулт: ${current.pronunciation}` 
+          message: `❌ Буруу. Зөв хариулт: ${current.word}` 
         });
       }
       
@@ -107,8 +115,16 @@ export default function GamePage({ onBack }) {
       setLoading(true);
       fetch('/api/word-questions')
         .then(res => res.json())
-        .then(data => {
-          setQuestions(data);
+        .then(base => {
+          const pool = Array.isArray(sourceWords) && sourceWords.length ? sourceWords : base;
+          const enriched = base.map((q) => {
+            const correct = q.word;
+            const candidates = pool.filter(w => (w.word || '') !== correct);
+            const wrongs = candidates.sort(() => Math.random() - 0.5).slice(0, 3).map(w => w.word);
+            const options = [correct, ...wrongs].sort(() => Math.random() - 0.5);
+            return { ...q, options, correctAnswer: correct };
+          });
+          setQuestions(enriched);
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -116,7 +132,6 @@ export default function GamePage({ onBack }) {
   
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', position: 'relative' }}>
-        {/* Celebration анимаци */}
         {showCelebration && (
           <>
             {[...Array(20)].map((_, i) => (
